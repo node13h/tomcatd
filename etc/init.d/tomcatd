@@ -1,0 +1,124 @@
+#!/bin/sh
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          tomcatd
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: Apache Tomcat daemon manager
+### END INIT INFO
+
+#    Apache Tomcat instance manager
+#    Copyright (C) 2013  Sergej Alikov <sergej.alikov@gmail.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# Source function library
+. /etc/init.d/functions
+
+BASE=/opt/tomcatd
+CONFD=$BASE/conf.d
+PID=$BASE/pid
+
+BASENAME=`basename $0`
+
+USER=`id -u --name`
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+        SU=runuser
+else
+        SU=su
+fi
+
+
+cmd() {
+
+  find $CONFD -name "*.conf" -print | while read filename; do {
+
+    # defaults
+    START=
+    STOP=
+    JAVA_HOME=
+    CATALINA_OPTS=
+
+    if [ -r "$filename" ]; then
+      . "$filename"
+
+      case "$1" in
+      start)
+            CMD=$START
+            TOMCAT_CMD=$"Starting ${BASENAME} service ${DESCRIPTION}: "
+            ;;
+      stop)
+            CMD=$STOP
+            TOMCAT_CMD=$"Stopping ${BASENAME} service ${DESCRIPTION}: "
+            ;;
+      esac
+
+      echo -n "$TOMCAT_CMD"
+
+      if [ "$USER" == $RUNAS ]; then
+        export JAVA_HOME=$JAVA_HOME; export CATALINA_OPTS=$CATALINA_OPTS; $CMD
+      else
+	ESC_JAVA_HOME=\"$JAVA_HOME\"
+	ESC_CATALINA_OPTS=\"$CATALINA_OPTS\"
+
+	# Ugly, but simple
+        $SU -l $RUNAS -c "export JAVA_HOME=$ESC_JAVA_HOME; export CATALINA_OPTS=$ESC_CATALINA_OPTS; $CMD"
+      fi
+
+      ret=$?
+      if [ $ret -eq 0 ]
+      then
+              success "$TOMCAT_CMD"
+      else
+              failure "$TOMCAT_CMD"
+              script_result=1
+      fi
+      echo
+
+    fi
+  } done
+
+}
+
+restart() {
+
+  cmd stop
+  sleep 1
+  cmd start
+
+}
+
+
+case "$1" in
+  start)
+        cmd start
+        ;;
+  stop)
+        cmd stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart|reload}"
+        exit 1
+esac
+
