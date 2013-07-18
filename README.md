@@ -9,7 +9,8 @@ with it's own JAVA/CATALINA settings.
 
 Tested with Tomcat 5.5, but should work with later versions.
 
-See opt/conf.d/example.conf
+See opt/conf.d/server.conf.example
+and INSTALL file
 
 Don't forget to run chkconfig --add tomcatd
 
