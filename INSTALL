@@ -1,0 +1,5 @@
+1. Copy files to /opt/tomcatd
+2. ln -s /opt/tomcatd/etc/init.d/tomcatd /etc/init.d/tomcatd
+3. chkconfig --add tomcatd
+4. Create/edit instance config files in /opt/tomcatd/conf.d/
+5. service tomcatd start
