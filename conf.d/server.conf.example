@@ -4,4 +4,5 @@ START=/home/tom/servers/production/bin/startup.sh
 STOP=/home/tom/servers/production/bin/shutdown.sh
 RUNAS=tom
 DESCRIPTION="Corporate BSS application"
+INSTANCE_NAME=initbss
 
