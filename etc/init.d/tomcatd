@@ -60,6 +60,12 @@ cmd() {
     if [ -r "$filename" ]; then
       . "$filename"
 
+      if [ -n "$2" ]; then
+        if [ "$2" != "$INSTANCE_NAME" ]; then
+          continue
+        fi
+      fi
+
       case "$1" in
       start)
             CMD=$START
@@ -100,25 +106,25 @@ cmd() {
 
 restart() {
 
-  cmd stop
+  cmd stop "$1"
   sleep 1
-  cmd start
+  cmd start "$1"
 
 }
 
 
 case "$1" in
   start)
-        cmd start
+        cmd start "$2"
         ;;
   stop)
-        cmd stop
+        cmd stop "$2"
         ;;
   restart|reload)
-        restart
+        restart "$2"
         ;;
   *)
-        echo "Usage: $0 {start|stop|restart|reload}"
+        echo "Usage: $0 {start [<instance>]|stop [<instance>]|restart|reload}"
         exit 1
 esac
 
